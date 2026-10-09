@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>QuantX Builder</title>
+<style>
+:root{--bg:#f6f5f1;--card:#fff;--fg:#1d1d1b;--mut:#625f58;--line:#dcd9cf;--ac:#3C3489;--acs:#EEEDFE;--cry:#EEEDFE;--cryb:#534AB7;--ctl:#E1F5EE;--ctlb:#0F6E56;--gry:#EFEDE6;--gryb:#888780;--ok:#27500A;--okb:#EAF3DE;--wr:#633806;--wrb:#FAEEDA;--er:#791F1F;--erb:#FCEBEB;--sh:rgba(40,36,90,.25)}
+@media (prefers-color-scheme:dark){:root{--bg:#161614;--card:#222220;--fg:#f1efe8;--mut:#b4b2a9;--line:#41403c;--ac:#CECBF6;--acs:#2e2a66;--cry:#3C3489;--cryb:#AFA9EC;--ctl:#085041;--ctlb:#5DCAA5;--gry:#3a3935;--gryb:#B4B2A9;--ok:#C0DD97;--okb:#173404;--wr:#FAC775;--wrb:#412402;--er:#F7C1C1;--erb:#501313;--sh:rgba(0,0,0,.5)}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;padding:0 0 max(32px,env(safe-area-inset-bottom))}
+.top{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line);padding:max(10px,env(safe-area-inset-top)) 16px 10px}
+.top>div{max-width:560px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;gap:10px}
+h1{font-size:18px;margin:0;font-weight:700;letter-spacing:.2px}h1 small{display:block;font-size:12px;font-weight:500;color:var(--mut)}
+#pill{font-size:13px;font-weight:700;padding:6px 12px;border-radius:99px;border:1.5px solid;white-space:nowrap}
+.p-ok{color:var(--ok);background:var(--okb);border-color:var(--ok)}.p-wr{color:var(--wr);background:var(--wrb);border-color:var(--wr)}.p-er{color:var(--er);background:var(--erb);border-color:var(--er)}
+main{max-width:560px;margin:0 auto;padding:0 16px}
+h2{font-size:15px;font-weight:700;margin:26px 0 4px;display:flex;align-items:center;gap:8px}
+h2 i{font-style:normal;width:24px;height:24px;border-radius:50%;background:var(--ac);color:var(--bg);display:grid;place-items:center;font-size:13px}
+.sub{color:var(--mut);font-size:14px;margin:0 0 10px}
+.seg{display:flex;gap:6px;flex-wrap:wrap;margin:14px 0 0}
+.seg button,.btn{font:inherit;font-size:14px;font-weight:600;padding:9px 14px;border-radius:10px;border:1.5px solid var(--line);background:var(--card);color:var(--fg);cursor:pointer;min-height:44px}
+.seg button[aria-pressed=true]{background:var(--ac);color:var(--bg);border-color:var(--ac)}
+.btn.pri{background:var(--ac);color:var(--bg);border-color:var(--ac)}.btn[disabled]{opacity:.45;cursor:not-allowed}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #378ADD;outline-offset:2px}
+.env{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:14px}.env select{font:inherit;padding:8px;border-radius:8px;border:1.5px solid var(--line);background:var(--card);color:var(--fg);min-height:40px}
+.stage{perspective:1000px;height:340px;display:grid;place-items:center;margin-top:8px;overflow:hidden;border-radius:16px;background:linear-gradient(180deg,var(--card),var(--gry));border:1px solid var(--line)}
+.scene{position:relative;width:330px;height:300px;transform-style:preserve-3d;transform:rotateX(38deg) rotateZ(var(--rz,-12deg));transition:transform .5s;margin-top:50px}
+.slab{position:absolute;left:0;width:200px;height:50px;transform-style:preserve-3d;transform:translate3d(0,var(--y),var(--z));transition:transform .7s cubic-bezier(.3,.7,.2,1);cursor:pointer}
+.slab.side{left:210px;width:120px}
+.slab .t{position:absolute;inset:0;border-radius:8px;border:1.5px solid var(--b);background:var(--c);padding:4px 8px;font-size:11px;line-height:1.25;color:var(--fg);overflow:hidden;box-shadow:0 10px 18px -8px var(--sh)}
+.slab .t b{display:block;font-size:13px}
+.slab::after{content:"";position:absolute;left:0;right:0;top:100%;height:12px;background:var(--b);border-radius:0 0 8px 8px;transform-origin:top;transform:rotateX(-90deg)}
+.slab.cry{--b:var(--cryb);--c:var(--cry)}.slab.ctl{--b:var(--ctlb);--c:var(--ctl)}.slab.gry{--b:var(--gryb);--c:var(--gry)}
+.slab.sel .t{outline:3px solid #378ADD}
+.kn{position:absolute;right:6px;width:11px;height:11px;border-radius:50%;border:2px solid var(--card)}
+.ctrls{display:flex;gap:10px;align-items:center;margin:10px 0}.ctrls input{flex:1;min-height:32px}
+.add{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+.add div{border:1.5px dashed var(--gryb);border-radius:10px;padding:8px;font-size:12px;color:var(--mut);background:var(--card)}
+.add div.on{border-style:solid;border-color:var(--ctlb);color:var(--fg);background:var(--ctl)}.add b{display:block;font-size:13px;color:var(--fg)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-top:10px}
+.card.off{opacity:.5}.card h3{font-size:15px;margin:0 0 2px}.card .for{font-size:12px;color:var(--mut);margin:0 0 8px}
+.opts{display:grid;gap:8px}
+.o{display:flex;gap:10px;align-items:flex-start;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;cursor:pointer;min-height:48px}
+.o:has(input:checked){border-color:var(--ac);background:var(--acs)}.o.dis{opacity:.5;cursor:not-allowed}
+.o input{width:18px;height:18px;margin-top:3px;flex:none;accent-color:var(--ac)}
+.o b{font-size:14px}.o small{display:block;font-size:12px;color:var(--mut);line-height:1.35}
+.tag{font-size:11px;font-weight:700;border-radius:99px;padding:1px 8px;margin-left:6px;border:1px solid;white-space:nowrap}
+.tag.available{color:var(--ok);border-color:var(--ok)}.tag.gated{color:var(--wr);border-color:var(--wr)}.tag.blocked,.tag.iface{color:var(--er);border-color:var(--er)}
+.fld{margin-top:10px;font-size:13px}.fld label{display:block;font-weight:600;margin-bottom:3px}.fld input,.fld select{width:100%;font:13px ui-monospace,Menlo,monospace;padding:9px;border:1.5px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);min-height:42px}
+.fld.bad input,.fld.bad select{border-color:var(--er)}
+#chk{display:grid;gap:6px}.r{font-size:14px;border-radius:10px;padding:8px 10px;border:1px solid;display:flex;gap:8px}
+.r b{flex:none;font-family:ui-monospace,Menlo,monospace;font-size:12px;padding-top:2px}
+.r.er{color:var(--er);background:var(--erb);border-color:var(--er)}.r.wr{color:var(--wr);background:var(--wrb);border-color:var(--wr)}.r.ok{color:var(--ok);background:var(--okb);border-color:var(--ok)}
+pre{margin:0;background:#16151d;color:#e8e6f5;border-radius:12px;padding:14px;font:12.5px/1.55 ui-monospace,Menlo,monospace;overflow:auto;max-height:420px}
+.act{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.note{font-size:12.5px;color:var(--mut);margin-top:14px}
+@media (prefers-reduced-motion:reduce){.scene,.slab{transition:none}}
+</style>
+</head>
+<body>
+<header class="top"><div><h1>QuantX Builder<small>Choose parts, get a validated quantx.yaml (schema v1 draft)</small></h1><span id="pill" class="p-ok" role="status" aria-live="polite"></span></div></header>
+<main>
+<h2><i>0</i>Start from a recipe</h2>
+<p class="sub">Recipes are example files, not code paths. Pick one, then change any part.</p>
+<div class="seg" id="pre"></div>
+<div class="env"><label for="env">Environment</label><select id="env"><option>dev</option><option>staging</option><option>production</option></select><span class="sub" style="margin:0">production turns weak parts into errors (E7)</span></div>
+<div class="stage" aria-label="3D view of the chosen parts"><div class="scene" id="scene"></div></div>
+<div class="ctrls"><label for="rot" class="sub" style="margin:0">Rotate</label><input id="rot" type="range" min="-45" max="45" value="-12"><button class="btn" id="snap" aria-pressed="false">Snap together</button></div>
+<div class="add" id="add"></div>
+<div id="steps"></div>
+<h2><i>6</i>Checks</h2>
+<p class="sub">The same rules the validator will run (docs/15). E1 to E3 and E6 cannot happen here: only valid keys are offered, blocked options are locked and auth is a single choice.</p>
+<div id="chk"></div>
+<h2><i>7</i>Your quantx.yaml</h2>
+<pre id="yaml" tabindex="0"></pre>
+<div class="act"><button class="btn pri" id="dl">Download quantx.yaml</button><button class="btn" id="cp">Copy</button><span id="msg" class="sub" role="status"></span></div>
+<p class="note">Then run <code>quantx validate --file quantx.yaml</code>. Secrets are never typed here: only references (<code>env:NAME</code> or <code>file:/path</code>). Design spec only: nothing is built, tested or reviewed. Gated options need independent review before any production claim. Fixed parts with no alternative today: JCS canonicalizer, system clock, in-memory replay store and rate limiter, HKDF-SHA256 binding, X25519.</p>
+</main>
+<script>
+const A='available',G='gated',B='blocked',I='iface',ST={available:'Available',gated:'Gated',blocked:'Blocked',iface:'Interface only'};
+const o=(v,n,d,s)=>({v,n,d,s});
+let S,snapped=false,sel=null;
+const PRE={
+A:{env:'dev',mode:'HYBRID',sigC:'ed25519',sigP:'ml-dsa-65',kemP:'ml-kem-768',reg:'unsigned',regRef:'file:/etc/quantx/registry.pub',state:'memory',redisRef:'env:QUANTX_REDIS_URL',cus:'memory_raw',pqcSt:'',hsmMod:'env:QUANTX_PKCS11_MODULE',hsmSlot:'env:QUANTX_PKCS11_SLOT',hsmPin:'env:QUANTX_PKCS11_PIN',fac:['totp'],thr:'off',zkp:'none',scan:[],auth:'bearer',tls:'off'},
+B:{env:'production',reg:'signed',state:'redis',cus:'hsm_pkcs11',pqcSt:'wrapped_seed',fac:['totp','push'],scan:['source','tls_inspector'],auth:'mtls',tls:'required'},
+C:{env:'production',mode:'PQC_ONLY',sigP:'ml-dsa-87',kemP:'ml-kem-1024',reg:'signed',state:'redis',cus:'hsm_pkcs11',pqcSt:'wrapped_seed',fac:['totp'],scan:['source'],auth:'mtls',tls:'required'}};
+const C=()=>S.mode!=='PQC_ONLY',P=()=>S.mode!=='CLASSICAL_ONLY',real=()=>S.cus!=='memory_raw';
+const SL=[
+{k:'mode',s:1,t:'Mode',one:1,o:[o('HYBRID','Hybrid','Classical and PQC, both must pass (default)',A),o('PQC_ONLY','PQC only','Explicit opt-in, no hybrid safety net',A),o('CLASSICAL_ONLY','Classical only','Explicit opt-in, no quantum protection',A)]},
+{k:'sigC',s:1,t:'Classical signature',one:1,use:C,o:[o('ed25519','Ed25519','Fast, small signatures',A),o('ecdsa-p256','ECDSA P-256','NIST curve for compliance needs',A)]},
+{k:'sigP',s:1,t:'PQC signature',one:1,use:P,o:[o('ml-dsa-65','ML-DSA-65','FIPS 204, 3,309 B signature',A),o('ml-dsa-87','ML-DSA-87','FIPS 204, higher security level',A),o('slh-dsa','SLH-DSA','Not in pyca yet (D-006)',B)]},
+{k:'kemP',s:1,t:'PQC key exchange',one:1,use:P,o:[o('ml-kem-768','ML-KEM-768','FIPS 203, 1,088 B ciphertext',A),o('ml-kem-1024','ML-KEM-1024','FIPS 203, higher security level',A)]},
+{k:'reg',s:2,t:'Registry config',one:1,o:[o('unsigned','Unsigned','Dev only',A),o('signed','Signed','Enterprise, review required',G)],x:()=>S.reg==='signed'?[['regRef','signing_key_ref','file:/etc/quantx/registry.pub']]:[]},
+{k:'state',s:2,t:'State store',one:1,o:[o('memory','In-memory','Lost on restart, one instance',A),o('redis','Redis','Shared and durable',A)],x:()=>S.state==='redis'?[['redisRef','url_ref','env:QUANTX_REDIS_URL']]:[]},
+{k:'cus',s:3,t:'Key custody',one:1,o:[o('memory_raw','Raw keys in memory','Demo only',A),o('encrypted_file','Encrypted file','Local vault',G),o('os_keychain','OS keychain','Platform store',G),o('hsm_pkcs11','HSM via PKCS#11','SoftHSM2 in dev, real HSM later',G)],x:()=>S.cus==='hsm_pkcs11'?[['hsmMod','module_ref','env:QUANTX_PKCS11_MODULE'],['hsmSlot','slot_ref','env:QUANTX_PKCS11_SLOT'],['hsmPin','pin_ref','env:QUANTX_PKCS11_PIN']]:[]},
+{k:'fac',s:4,t:'Second factor',multi:1,o:[o('totp','TOTP','Offline time-based codes',A),o('hotp','HOTP','Offline counter-based codes',A),o('push','Push approval','Single-use, rate-limited',A)]},
+{k:'thr',s:4,t:'Threshold approval',one:1,o:[o('off','Off','No m-of-n step',A),o('on','m-of-n','Sits between Combiners and Session',G)]},
+{k:'zkp',s:4,t:'Membership proof',one:1,o:[o('none','None','',A),o('merkle','Merkle','Prove membership in a set',G),o('anonymous','Anonymous ZK','Interface only, refused by the validator',I)]},
+{k:'scan',s:5,t:'Compliance scanners',multi:1,o:[o('source','Source scanner','Best-effort, always disclaimed',A),o('tls_inspector','TLS inspector','Checks negotiated groups',A)]},
+{k:'auth',s:5,t:'Service authentication',one:1,o:[o('bearer','Bearer token','Constant-time compare',A),o('mtls','mTLS','One method only (proposed default)',A)]},
+{k:'tls',s:5,t:'Transport check',one:1,o:[o('required','Require hybrid TLS group','Reject connections without it (SR-13)',A),o('off','Off','Dev only',A)]}
+];
+const STEPS=['','Algorithms','Registry and state','Key custody','Second factor and add-ons','Service'];
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function cards(){let h='',last=0;SL.forEach(s=>{if(s.s!==last){last=s.s;h+=`<h2><i>${s.s}</i>${STEPS[s.s]}</h2>`}
+ const u=!s.use||s.use();h+=`<fieldset class="card${u?'':' off'}" style="margin-inline:0;border:1px solid var(--line)"><legend style="display:none">${s.t}</legend><h3>${s.t}</h3><p class="for">${u?'':'Not used in this mode'}</p><div class="opts">`;
+ s.o.forEach(p=>{const dis=p.s===B||p.s===I,on=s.one?S[s.k]===p.v:S[s.k].includes(p.v);h+=`<label class="o${dis?' dis':''}"><input type="${s.one?'radio':'checkbox'}" name="${s.k}" value="${p.v}"${on?' checked':''}${dis?' disabled':''}><span><b>${p.n}</b><span class="tag ${p.s}">${ST[p.s]}</span>${p.d?`<small>${p.d}</small>`:''}</span></label>`});
+ h+='</div>';(s.x?s.x():[]).forEach(([k,l,ph])=>{h+=`<div class="fld" data-k="${k}"><label for="f-${k}">${l}</label><input id="f-${k}" data-k="${k}" value="${esc(S[k])}" placeholder="${ph}" autocomplete="off" spellcheck="false"></div>`});
+ if(s.k==='cus'&&real()&&P())h+=`<div class="fld" data-k="pqcSt"><label for="f-pqc">custody.pqc_key_storage</label><select id="f-pqc" data-k="pqcSt"><option value="">not set</option><option value="wrapped_seed"${S.pqcSt?' selected':''}>wrapped_seed (open: D-007, D-008)</option></select></div>`;
+ h+='</fieldset>'});
+ const el=document.getElementById('steps');el.innerHTML=h;
+ el.querySelectorAll('input[type=radio],input[type=checkbox]').forEach(i=>i.onchange=()=>{const s=SL.find(x=>x.k===i.name);if(s.one)S[s.k]=i.value;else S[s.k]=[...el.querySelectorAll(`input[name=${s.k}]:checked`)].map(x=>x.value);cards();upd()});
+ el.querySelectorAll('.fld input,.fld select').forEach(i=>i.oninput=()=>{S[i.dataset.k]=i.value.trim();upd()})}
+function rules(){const E=[],W=[],ref=v=>/^(env|file):\S+/.test(v);
+ const need=(k,l)=>{if(!S[k])E.push(['E5',`${l} is required (a reference such as env:NAME).`]);else if(!ref(S[k]))E.push(['E4',`${l} holds a literal. Use env:NAME or file:/path, never the secret.`])};
+ if(S.reg==='signed')need('regRef','signing_key_ref');if(S.state==='redis')need('redisRef','url_ref');
+ if(S.cus==='hsm_pkcs11'){need('hsmMod','module_ref');need('hsmSlot','slot_ref');need('hsmPin','pin_ref')}
+ if(S.env==='production'){if(S.state==='memory')E.push(['E7','Production cannot use in-memory state.']);if(S.cus==='memory_raw')E.push(['E7','Production cannot use raw keys in memory.']);if(S.reg==='unsigned')E.push(['E7','Production needs a signed registry config.']);if(S.tls==='off')E.push(['E7','Production must require the hybrid TLS group.'])}
+ if(real()&&P()&&!S.pqcSt)E.push(['E8','Set custody.pqc_key_storage when a PQC algorithm is used with real custody (open: D-007, D-008).']);
+ if(S.mode==='CLASSICAL_ONLY')W.push(['W1','No protection against harvest-now-decrypt-later (D2).']);
+ if(S.mode==='PQC_ONLY')W.push(['W2','No hybrid safety net, and pyca PQC support is recent (D-006).']);
+ const lv={'ml-dsa-65':3,'ml-dsa-87':5,'ml-kem-768':3,'ml-kem-1024':5};if(P()&&lv[S.sigP]!==lv[S.kemP])W.push(['W3','Signature and key exchange are at different security levels.']);
+ if(S.state==='memory'&&(real()||S.reg==='signed'))W.push(['W4','In-memory state is lost on restart and not shared between instances.']);
+ if(S.reg==='unsigned'&&(S.cus==='hsm_pkcs11'||S.cus==='os_keychain'))W.push(['W5','Unsigned registry config with real key custody.']);
+ if(S.cus==='hsm_pkcs11'&&P())W.push(['W6','PQC seeds sit under an HSM key. They are not signed on-token (D-008).']);
+ if(!S.fac.length)W.push(['W7','No second factor (D4).']);
+ const g=[];SL.forEach(s=>{(s.one?[S[s.k]]:S[s.k]).forEach(v=>{const p=s.o.find(x=>x.v===v);if(p&&p.s===G&&(!s.use||s.use()))g.push(p.n)})});if(g.length)W.push(['W8','Gated, needs independent review: '+g.join(', ')+'.']);
+ if(S.tls==='off'&&S.env!=='production')W.push(['W9','Hybrid TLS group not required (SR-13). Fine for dev only.']);
+ return{E,W}}
+function yaml(){const q=v=>`"${v}"`,L=['# generated by QuantX Builder, schema_version 1 (draft, docs/15)','schema_version: 1','environment: '+S.env,'mode: '+S.mode,'algorithms:'];
+ L.push('  signature: {'+[C()?'classical: '+S.sigC:'',P()?'pqc: '+S.sigP:''].filter(Boolean).join(', ')+'}');
+ L.push('  kem:       {'+[C()?'classical: x25519':'',P()?'pqc: '+S.kemP:''].filter(Boolean).join(', ')+'}');
+ L.push('registry: {config_signing: '+S.reg+(S.reg==='signed'?', signing_key_ref: '+q(S.regRef):'')+'}');
+ L.push('state: {backend: '+S.state+(S.state==='redis'?', url_ref: '+q(S.redisRef):'')+'}');
+ if(S.cus==='memory_raw'||S.cus==='')L.push('custody: {backend: memory_raw}');else{L.push('custody:','  backend: '+S.cus);if(P()&&S.pqcSt)L.push('  pqc_key_storage: '+S.pqcSt);if(S.cus==='hsm_pkcs11')L.push('  module_ref: '+q(S.hsmMod),'  slot_ref: '+q(S.hsmSlot),'  pin_ref: '+q(S.hsmPin))}
+ L.push('second_factor: ['+S.fac.join(', ')+']','threshold: {enabled: '+(S.thr==='on')+'}','membership_proof: {backend: '+S.zkp+'}','compliance: {scanners: ['+S.scan.join(', ')+']}','service: {auth: '+S.auth+', tls_enforcement: '+S.tls+'}');return L.join('\n')+'\n'}
+const NODES=[
+{id:'adapters',n:'Adapters',cl:'cry',y:0,out:['Bytes','#D85A30'],t:()=>[[C()?S.sigC:'',P()?S.sigP:''].filter(Boolean).join(' + '),[C()?'x25519':'',P()?S.kemP:''].filter(Boolean).join(' + ')]},
+{id:'combiners',n:'Combiners',cl:'cry',y:1,in:['Bytes','#D85A30'],out:['Verified','#639922'],t:()=>[S.mode,'both legs, HKDF-SHA256']},
+{id:'registry',n:'Registry',cl:'ctl',y:1,side:1,out:['Role','#BA7517'],t:()=>[S.reg,'']},
+{id:'session',n:'Session',cl:'ctl',y:2,in:['Verified','#639922'],out:['Subject','#378ADD'],t:()=>[S.state+' state',S.auth+' / TLS '+S.tls]},
+{id:'gates',n:'OTP + wallet',cl:'ctl',y:3,in:['Subject','#378ADD'],out:['Token','#D4537E'],t:()=>[S.fac.join(' + ')||'no second factor',S.cus]},
+{id:'token',n:'Session token',cl:'gry',y:4,in:['Token','#D4537E'],t:()=>['only if every gate passes','']}];
+function scene(){const sc=document.getElementById('scene');if(!sc.children.length)NODES.forEach(n=>{const d=document.createElement('div');d.className='slab '+n.cl+(n.side?' side':'');d.id='n-'+n.id;d.tabIndex=0;d.innerHTML='<div class="t"></div>';d.onclick=()=>{sel=sel===n.id?null:n.id;scene()};sc.appendChild(d)});
+ NODES.forEach(n=>{const d=document.getElementById('n-'+n.id),dy=snapped?54:68,dz=snapped?10:34;d.style.setProperty('--y',n.y*dy+'px');d.style.setProperty('--z',(4-n.y)*dz+(n.side?0:0)+'px');d.classList.toggle('sel',sel===n.id);
+ const t=n.t();d.querySelector('.t').innerHTML=`<b>${n.n}</b>${t[0]}<br>${t[1]}`+(n.in?`<span class="kn" style="top:5px;background:${n.in[1]}" title="in: ${n.in[0]}"></span>`:'')+(n.out?`<span class="kn" style="bottom:5px;background:${n.out[1]}" title="out: ${n.out[0]}"></span>`:'')});
+ document.getElementById('add').innerHTML=[['Threshold',S.thr==='on','m-of-n'],['Proofs',S.zkp!=='none',S.zkp],['Compliance',S.scan.length>0,S.scan.join(' + ')||'off']].map(([n,on,v])=>`<div class="${on?'on':''}"><b>${n}</b>${on?v:'off'}</div>`).join('')}
+function upd(){scene();const{E,W}=rules(),y=yaml();document.getElementById('yaml').textContent=y;
+ const pl=document.getElementById('pill');pl.className=E.length?'p-er':W.length?'p-wr':'p-ok';pl.textContent=E.length?`✕ ${E.length} error${E.length>1?'s':''}`:W.length?`! Valid, ${W.length} warning${W.length>1?'s':''}`:'✓ Valid';
+ document.getElementById('chk').innerHTML=(E.length?'':'<div class="r ok"><b>OK</b>No errors. quantx validate would exit 0.</div>')+E.map(r=>`<div class="r er"><b>${r[0]}</b>${r[1]}</div>`).join('')+W.map(r=>`<div class="r wr"><b>${r[0]}</b>${r[1]}</div>`).join('');
+ ['dl','cp'].forEach(i=>document.getElementById(i).disabled=E.length>0);document.getElementById('msg').textContent=E.length?'Fix the errors to export (fail closed).':'';
+ document.querySelectorAll('.fld').forEach(f=>{const k=f.dataset.k;f.classList.toggle('bad',E.some(e=>e[1].startsWith(({regRef:'signing_key_ref',redisRef:'url_ref',hsmMod:'module_ref',hsmSlot:'slot_ref',hsmPin:'pin_ref'})[k]||'~')))})}
+function load(k){const base=JSON.parse(JSON.stringify(PRE.A));S=Object.assign(base,JSON.parse(JSON.stringify(PRE[k])));document.getElementById('env').value=S.env;document.querySelectorAll('#pre button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.k===k));cards();upd()}
+[['A','Recipe A: demo'],['B','Recipe B: enterprise'],['C','Recipe C: PQC only']].forEach(([k,t])=>{const b=document.createElement('button');b.textContent=t;b.dataset.k=k;b.onclick=()=>load(k);document.getElementById('pre').appendChild(b)});
+document.getElementById('env').onchange=e=>{S.env=e.target.value;upd()};
+document.getElementById('rot').oninput=e=>document.getElementById('scene').style.setProperty('--rz',e.target.value+'deg');
+const sn=document.getElementById('snap');sn.onclick=()=>{snapped=!snapped;sn.textContent=snapped?'Pull apart':'Snap together';sn.setAttribute('aria-pressed',snapped);scene()};
+document.getElementById('dl').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([yaml()],{type:'text/yaml'}));a.download='quantx.yaml';a.click();document.getElementById('msg').textContent='Downloaded.'};
+document.getElementById('cp').onclick=async()=>{try{await navigator.clipboard.writeText(yaml());document.getElementById('msg').textContent='Copied.'}catch(e){document.getElementById('msg').textContent='Copy failed, select the text instead.'}};
+load('A');
+</script>
+</body>
+</html>

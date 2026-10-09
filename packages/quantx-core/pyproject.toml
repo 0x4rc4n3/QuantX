@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "quantx-core"
+version = "0.1.0"
+description = "Layer 0 foundational interfaces and reference implementations for QuantX"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.optional-dependencies]
+redis = ["redis>=5.0.0"]
+test = ["pytest>=8.0.0", "hypothesis>=6.0.0"]
+
+[tool.setuptools.packages.find]
+where = ["src"]

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>QuantX: the puzzle map</title>
+<style>
+:root{--bg:#fbfaf7;--fg:#22221f;--mut:#63625c;--line:#d7d5cc;--cry:#EEEDFE;--crys:#534AB7;--ctl:#E1F5EE;--ctls:#0F6E56;--gry:#F1EFE8;--grys:#888780;--t1:#3C3489;--t2:#085041;--t3:#444441;--card:#fff}
+@media (prefers-color-scheme:dark){:root{--bg:#1b1b19;--fg:#f1efe8;--mut:#b4b2a9;--line:#444441;--cry:#3C3489;--crys:#AFA9EC;--ctl:#085041;--ctls:#5DCAA5;--gry:#444441;--grys:#B4B2A9;--t1:#CECBF6;--t2:#9FE1CB;--t3:#D3D1C7;--card:#262624}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;padding:max(16px,env(safe-area-inset-top)) 16px max(24px,env(safe-area-inset-bottom))}
+main{max-width:460px;margin:0 auto}
+h1{font-size:22px;font-weight:600;margin:4px 0 4px}
+p{margin:0 0 12px;color:var(--mut);font-size:15px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:12px 0}
+button{font:inherit;font-weight:600;font-size:15px;padding:10px 16px;border-radius:8px;border:1px solid var(--fg);background:var(--fg);color:var(--bg);cursor:pointer}
+button:focus-visible,svg g.pc:focus-visible{outline:3px solid #378ADD;outline-offset:3px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:13px;padding:3px 10px;border:1px solid var(--line);border-radius:99px;background:var(--card)}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+svg{width:100%;height:auto;display:block;touch-action:manipulation}
+.pc{cursor:pointer;transition:transform .7s cubic-bezier(.3,.7,.2,1),opacity .25s}
+.pc path{stroke-width:1.5;transition:stroke-width .2s}
+.pc.sel path{stroke-width:3}
+.crypto path{fill:var(--cry);stroke:var(--crys)}.crypto text{fill:var(--t1)}
+.control path{fill:var(--ctl);stroke:var(--ctls)}.control text{fill:var(--t2)}
+.out path,.flat path{fill:var(--gry);stroke:var(--grys)}.out text,.flat text{fill:var(--t3)}
+.flat path{stroke-dasharray:6 4}
+.nm{font:600 14px ui-sans-serif,system-ui,sans-serif}
+.fl{font:400 11px ui-sans-serif,system-ui,sans-serif}
+.ring{fill:none;stroke-width:2.5;opacity:0;pointer-events:none}
+.ring.on{opacity:1}.ring.self{opacity:.9;stroke-dasharray:3 3}
+.dim{opacity:.28}
+@media (prefers-reduced-motion:no-preference){.ring.on{animation:pl 1.2s ease-in-out infinite}}
+@keyframes pl{50%{transform:scale(1.25)}}
+.ring{transform-box:fill-box;transform-origin:center}
+#info{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-top:12px;min-height:120px}
+#info h2{font-size:17px;font-weight:600;margin:0 0 4px}
+#info p{color:var(--fg);margin:0 0 8px;font-size:15px}
+#info ul{margin:0;padding:0;list-style:none;display:grid;gap:6px}
+#info li{font-size:14px}
+.cap{font-size:13px;color:var(--mut)}
+</style>
+</head>
+<body>
+<main>
+<h1>QuantX, as puzzle pieces</h1>
+<p>Each piece has a name. Only pieces that can plug into something have a knob (output) or a notch (input). A knob fits a notch of the same type and colour.</p>
+<div class="bar"><button id="snap" type="button" aria-pressed="false">Snap together</button></div>
+<div class="bar" id="legend" aria-label="Connector types"></div>
+<svg id="board" viewBox="0 0 420 890" role="group" aria-label="QuantX components as puzzle pieces. Select a piece to see what it joins."></svg>
+<div id="info" aria-live="polite"><h2>Tap a piece</h2><p>You will see what it takes in, what it gives out, and which other pieces it can join. Pieces with dashed outlines have no connectable faces.</p></div>
+<p class="cap">Every piece is also built to the Layer 0 contracts (Signer, Verifier, KEMProvider, KeyValueStore, Clock and others). That is the shared frame, so it is not drawn as a face. Design spec only, nothing here is built or reviewed yet.</p>
+</main>
+<script>
+const NS='http://www.w3.org/2000/svg';
+const TYPES={Bytes:'#D85A30',Role:'#BA7517',Verified:'#639922',Subject:'#378ADD',Token:'#D4537E'};
+const TDESC={Bytes:'signature or ciphertext bytes',Role:'a role: mode plus algorithm list',Verified:'a yes/no result plus the combined key',Subject:'an identified subject past the main check',Token:'a session token'};
+const P=[
+{id:'adapters',name:'Adapters',layer:'L1',cat:'crypto',w:210,h:86,ex:[20,30],sn:[20,30],faces:{bottom:['tab','Bytes']},does:'Ed25519, ECDSA, X25519, ML-DSA and ML-KEM, each behind the same small interface. PQC comes from the pyca cryptography library.'},
+{id:'combiners',name:'Combiners',layer:'L2',cat:'crypto',w:210,h:86,ex:[20,166],sn:[20,116],faces:{top:['socket','Bytes'],right:['socket','Role'],bottom:['tab','Verified']},does:'Parses the signature or KEM container, requires both the classical and PQC checks to pass in hybrid mode, and binds the key with HKDF.'},
+{id:'registry',name:'Registry',layer:'L3',cat:'control',w:150,h:86,ex:[262,166],sn:[230,116],faces:{left:['tab','Role']},does:'Holds the roles. Which mode and which algorithms a role uses is set here, in config, never taken from the wire.'},
+{id:'session',name:'Session',layer:'L4',cat:'control',w:210,h:86,ex:[20,302],sn:[20,202],faces:{top:['socket','Verified'],bottom:['tab','Subject']},does:'Single-use challenges, replay and rate limits. No token is minted on any error path.'},
+{id:'gates',name:'OTP + wallet',layer:'L5-7',cat:'control',w:210,h:86,ex:[20,438],sn:[20,288],faces:{top:['socket','Subject'],bottom:['tab','Token']},does:'Second factor (TOTP, HOTP, push), key custody and recovery. Releases a token only when every gate passes.'},
+{id:'token',name:'Session token',layer:'out',cat:'out',w:210,h:56,ex:[20,574],sn:[20,374],faces:{top:['socket','Token']},does:'The result of a successful sign-in.'},
+{id:'threshold',name:'Threshold',layer:'L8',cat:'control',w:190,h:86,ex:[20,690],sn:[20,480],faces:{top:['socket','Verified'],bottom:['tab','Verified']},does:'Optional m-of-n approval. It can slot in between Combiners and Session because it takes and gives the same type.'},
+{id:'compliance',name:'Compliance',layer:'L10',cat:'flat',w:170,h:86,ex:[230,690],sn:[230,480],faces:{},does:'Crypto inventory and reports. It reads what is deployed and has nothing to plug into.'},
+{id:'sidecar',name:'REST sidecar',layer:'service',cat:'flat',w:380,h:50,ex:[20,820],sn:[20,620],faces:{},does:'One Docker image that wraps the whole chain and exposes it over HTTP. It wraps rather than joins, so it has no faces.'}
+];
+const board=document.getElementById('board'),info=document.getElementById('info');
+const OUT={top:[0,-1],right:[1,0],bottom:[0,1],left:[-1,0]};
+function seg(kind,L){if(kind==='flat')return[['L',[L,0]]];const c=L/2,s=kind==='tab'?-1:1;return[['L',[c-10,0]],['C',[c-10,s*8],[c-19,s*6],[c-19,s*14]],['C',[c-19,s*24],[c+19,s*24],[c+19,s*14]],['C',[c+19,s*6],[c+10,s*8],[c+10,0]],['L',[L,0]]]}
+function pathFor(p){const w=p.w,h=p.h,f=p.faces,M={top:(u,v)=>[u,v],right:(u,v)=>[w-v,u],bottom:(u,v)=>[w-u,h-v],left:(u,v)=>[v,h-u]};let d='M0 0';for(const side of['top','right','bottom','left']){const L=(side==='top'||side==='bottom')?w:h;const k=f[side]?f[side][0]:'flat';for(const s of seg(k,L)){d+=' '+s[0]+' '+s.slice(1).map(q=>M[side](q[0],q[1]).map(n=>+n.toFixed(1)).join(' ')).join(' ')}}return d+' Z'}
+function el(n,a,t){const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);if(t!=null)e.textContent=t;return e}
+function center(p,side){return{top:[p.w/2,0],bottom:[p.w/2,p.h],left:[0,p.h/2],right:[p.w,p.h/2]}[side]}
+function dotPos(p,side,kind){const c=center(p,side),o=OUT[side],m=kind==='tab'?13:-13;return[c[0]+o[0]*m,c[1]+o[1]*m]}
+let snapped=false,selected=null;
+P.forEach(p=>{
+ const g=el('g',{class:'pc '+p.cat,id:'p-'+p.id,tabindex:0,role:'button','aria-label':p.name+', '+p.layer});
+ g.appendChild(el('path',{d:pathFor(p)}));
+ g.appendChild(el('text',{class:'nm',x:p.w/2,y:p.h>60?50:p.h/2+5,'text-anchor':'middle'},p.name+' · '+p.layer));
+ for(const side in p.faces){const[kind,type]=p.faces[side],[x,y]=dotPos(p,side,kind);
+  g.appendChild(el('circle',{cx:x,cy:y,r:4.5,fill:TYPES[type]}));
+  g.appendChild(el('circle',{class:'ring',id:'r-'+p.id+'-'+side,cx:x,cy:y,r:15,stroke:TYPES[type]}));
+  const lab=(kind==='tab'?'out: ':'in: ')+type;
+  const pos={top:[p.w/2,30,'middle'],bottom:[p.w/2,p.h-9,'middle'],right:[p.w-28,70,'end'],left:[12,70,'start']}[side];
+  g.appendChild(el('text',{class:'fl',x:pos[0],y:pos[1],'text-anchor':pos[2]},lab))}
+ g.addEventListener('click',()=>select(p.id));
+ g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();select(p.id)}});
+ board.appendChild(g);p.g=g;
+});
+function place(){P.forEach(p=>{const q=snapped?p.sn:p.ex;p.g.style.transform='translate('+q[0]+'px,'+q[1]+'px)'});board.setAttribute('viewBox','0 0 420 '+(snapped?700:890))}
+function matches(p){const out=[];for(const side in p.faces){const[k,t]=p.faces[side];P.forEach(o=>{if(o===p)return;for(const s2 in o.faces){const[k2,t2]=o.faces[s2];if(t2===t&&k2!==k)out.push({from:side,k,t,o,s2})}})}return out}
+function select(id){
+ selected=selected===id?null:id;
+ document.querySelectorAll('.ring').forEach(r=>r.setAttribute('class','ring'));
+ P.forEach(p=>{p.g.classList.remove('sel','dim')});
+ if(!selected){info.innerHTML='<h2>Tap a piece</h2><p>You will see what it takes in, what it gives out, and which other pieces it can join. Pieces with dashed outlines have no connectable faces.</p>';return}
+ const p=P.find(x=>x.id===selected),m=matches(p),keep=new Set([p.id,...m.map(x=>x.o.id)]);
+ p.g.classList.add('sel');
+ P.forEach(o=>{if(!keep.has(o.id))o.g.classList.add('dim')});
+ for(const s in p.faces)document.getElementById('r-'+p.id+'-'+s).setAttribute('class','ring self');
+ m.forEach(x=>document.getElementById('r-'+x.o.id+'-'+x.s2).setAttribute('class','ring on'));
+ const dot=t=>'<span class="dot" style="background:'+TYPES[t]+'"></span>';
+ let h='<h2>'+p.name+' <span class="cap">'+p.layer+'</span></h2><p>'+p.does+'</p>';
+ const sides=Object.keys(p.faces);
+ if(!sides.length){h+='<p class="cap">No connectable faces. Nothing plugs into this piece and it plugs into nothing.</p>'}
+ else{h+='<ul>';sides.forEach(s=>{const[k,t]=p.faces[s];const j=m.filter(x=>x.from===s).map(x=>x.o.name).join(', ')||'nothing yet';h+='<li>'+dot(t)+' <b>'+(k==='tab'?'Gives out':'Takes in')+' '+t+'</b> ('+TDESC[t]+') on its '+s+'. Joins: '+j+'.</li>'});h+='</ul>'}
+ info.innerHTML=h;
+}
+const lg=document.getElementById('legend');
+for(const t in TYPES){const c=document.createElement('span');c.className='chip';c.innerHTML='<span class="dot" style="background:'+TYPES[t]+'"></span>'+t;lg.appendChild(c)}
+const btn=document.getElementById('snap');
+btn.addEventListener('click',()=>{snapped=!snapped;btn.textContent=snapped?'Pull apart':'Snap together';btn.setAttribute('aria-pressed',snapped);place()});
+place();
+</script>
+</body>
+</html>
