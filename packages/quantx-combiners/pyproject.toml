@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "quantx-combiners"
+version = "0.1.0"
+description = "QuantX crypto-agile hybrid and post-quantum combiners (Layer 2)"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{ name = "QuantX Team" }]
+license = { text = "Apache-2.0" }
+dependencies = [
+    "quantx-core>=0.1.0",
+    "cryptography>=48.0.0,<51.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "hypothesis>=6.100.0",
+    "quantx-crypto-adapters>=0.1.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
