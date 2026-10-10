@@ -63,12 +63,9 @@ class TotpProvider:
 
     def _get_secret(self, subject_id: str) -> bytes | None:
         if self._wallet is not None:
-            try:
-                retrieved = self._wallet.retrieve(subject_id)
-                if isinstance(retrieved, bytes):
-                    return retrieved
-            except Exception:
-                pass
+            retrieved = self._wallet.retrieve(subject_id)
+            if isinstance(retrieved, bytes):
+                return retrieved
         return self._secrets.get(subject_id)
 
     def register_secret(self, subject_id: str, secret: bytes) -> None:
