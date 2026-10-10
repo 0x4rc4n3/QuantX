@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "quantx-threshold"
+version = "0.1.0"
+description = "Layer 8 threshold governance and multi-key policies for QuantX"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "quantx-core",
+    "quantx-combiners",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=8.0.0",
+    "hypothesis>=6.0.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
