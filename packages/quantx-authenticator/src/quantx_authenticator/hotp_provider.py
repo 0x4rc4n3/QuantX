@@ -32,15 +32,29 @@ class HotpProvider:
         lookahead_window: int = 10,
         digits: int = 6,
         secrets: Mapping[str, bytes] | None = None,
+        wallet: Any | None = None,
     ) -> None:
         self._rate_limiter = rate_limiter
         self._kv_store = kv_store
         self._lookahead_window = lookahead_window
         self._digits = digits
         self._secrets: dict[str, bytes] = dict(secrets or {})
+        self._wallet = wallet
+
+    def _get_secret(self, subject_id: str) -> bytes | None:
+        if self._wallet is not None:
+            try:
+                retrieved = self._wallet.retrieve(subject_id)
+                if isinstance(retrieved, bytes):
+                    return retrieved
+            except Exception:
+                pass
+        return self._secrets.get(subject_id)
 
     def register_secret(self, subject_id: str, secret: bytes, initial_counter: int = 0) -> None:
-        """Register or update test-fixture secret and initial counter for a subject."""
+        """Register or update secret and initial counter for a subject in KeyWallet or memory (D11)."""
+        if self._wallet is not None:
+            self._wallet.store(subject_id, secret)
         self._secrets[subject_id] = secret
         self.set_counter(subject_id, initial_counter)
 
@@ -62,7 +76,7 @@ class HotpProvider:
 
     def generate_code(self, subject_id: str, counter_override: int | None = None) -> str:
         """Generate HOTP code for subject at current or specified counter."""
-        secret = self._secrets.get(subject_id)
+        secret = self._get_secret(subject_id)
         if not secret:
             raise ValueError(f"No secret registered for subject '{subject_id}'")
         cnt = counter_override if counter_override is not None else self.get_counter(subject_id)
@@ -74,7 +88,7 @@ class HotpProvider:
         if not self._rate_limiter.allow(subject_id):
             raise RateLimitedError(f"HOTP verification rate limit exceeded for '{subject_id}'")
 
-        secret = self._secrets.get(subject_id)
+        secret = self._get_secret(subject_id)
         if not secret:
             return False
 

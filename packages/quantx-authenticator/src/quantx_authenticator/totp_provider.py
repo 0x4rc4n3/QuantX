@@ -50,6 +50,7 @@ class TotpProvider:
         digits: int = 6,
         allowed_drift_steps: int = 1,
         secrets: Mapping[str, bytes] | None = None,
+        wallet: Any | None = None,
     ) -> None:
         self._rate_limiter = rate_limiter
         self._clock = clock
@@ -58,9 +59,22 @@ class TotpProvider:
         self._digits = digits
         self._allowed_drift_steps = allowed_drift_steps
         self._secrets: dict[str, bytes] = dict(secrets or {})
+        self._wallet = wallet
+
+    def _get_secret(self, subject_id: str) -> bytes | None:
+        if self._wallet is not None:
+            try:
+                retrieved = self._wallet.retrieve(subject_id)
+                if isinstance(retrieved, bytes):
+                    return retrieved
+            except Exception:
+                pass
+        return self._secrets.get(subject_id)
 
     def register_secret(self, subject_id: str, secret: bytes) -> None:
-        """Register or update test-fixture secret for a subject (interim until Layer 6 KeyWallet)."""
+        """Register or update secret for a subject in KeyWallet or memory (D11)."""
+        if self._wallet is not None:
+            self._wallet.store(subject_id, secret)
         self._secrets[subject_id] = secret
 
     def generate_code_for_step(self, secret: bytes, step: int) -> str:
@@ -69,7 +83,7 @@ class TotpProvider:
 
     def generate_code(self, subject_id: str, offset_seconds: int = 0) -> str:
         """Generate current TOTP code for a subject given current clock time."""
-        secret = self._secrets.get(subject_id)
+        secret = self._get_secret(subject_id)
         if not secret:
             raise ValueError(f"No secret registered for subject '{subject_id}'")
         now_ts = self._clock.now().timestamp() + offset_seconds
@@ -86,7 +100,7 @@ class TotpProvider:
         if not self._rate_limiter.allow(subject_id):
             raise RateLimitedError(f"TOTP verification rate limit exceeded for '{subject_id}'")
 
-        secret = self._secrets.get(subject_id)
+        secret = self._get_secret(subject_id)
         if not secret:
             return False
 
