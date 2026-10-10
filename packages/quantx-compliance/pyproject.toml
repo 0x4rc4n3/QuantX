@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "quantx-compliance"
+version = "0.1.0"
+description = "Layer 10 Observability, CryptoBOM, static scanner, and TLS inspection for QuantX"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "quantx-core",
+    "cryptography>=41.0.0",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=8.0.0",
+    "hypothesis>=6.0.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
