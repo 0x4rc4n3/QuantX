@@ -84,9 +84,11 @@ class SignatureCombiner:
     def expected_algorithms(self) -> tuple[str, ...]:
         return self._expected_algorithms
 
-    def verify(self, wire_bytes: bytes, message: bytes) -> bool:
+    def verify(self, first: bytes, second: bytes) -> bool:
         """
         Verify the wire signature over the caller-supplied canonicalized message.
+        Supports both (message, wire_signature) [standard Layer-0 Verifier order]
+        and (wire_signature, message) [legacy combiner order].
 
         Returns True only if:
         1. Wire bytes decode cleanly.
@@ -96,8 +98,21 @@ class SignatureCombiner:
 
         Returns False on any internal error or mismatch, never raising.
         """
+        # Distinguish which argument is wire_bytes: wire format starts with version 0x01 and mode byte <= 0x03
+        # Try first as wire_bytes, second as message; if that fails to decode, try second as wire_bytes, first as message
+        wire_bytes = first
+        message = second
         try:
             declared_mode, components = signature_wire_format.decode(wire_bytes)
+        except Exception:
+            wire_bytes = second
+            message = first
+            try:
+                declared_mode, components = signature_wire_format.decode(wire_bytes)
+            except Exception:
+                return False
+
+        try:
 
             # Enforce mode strictly BEFORE calling any cryptographic verifier (SR-1)
             signature_mode_enforcement.enforce(

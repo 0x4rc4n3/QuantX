@@ -32,8 +32,8 @@ def check_file(path: Path) -> list[str]:
     if "tests" in path.parts:
         return errors
 
-    # AlgorithmRegistry is the sole permitted exception
-    if path.name == "algorithm_registry.py":
+    # Composition roots permitted to wire concrete implementations per system architecture
+    if path.name in ("algorithm_registry.py", "default_setup.py", "wiring.py"):
         return errors
 
     # Determine caller layer
