@@ -1,0 +1,24 @@
+# Example AlgorithmRegistry configuration (dev / demo unsigned use)
+roles:
+  - role_id: "session-auth"
+    mode: "HYBRID"
+    signature_algorithms:
+      - "ed25519"
+      - "ml-dsa-65"
+    kem_algorithms:
+      - "x25519"
+      - "ml-kem-768"
+
+  - role_id: "session-auth-pqc-only"
+    mode: "PQC_ONLY"
+    signature_algorithms:
+      - "ml-dsa-65"
+    kem_algorithms:
+      - "ml-kem-768"
+
+  - role_id: "session-auth-classical-only"
+    mode: "CLASSICAL_ONLY"
+    signature_algorithms:
+      - "ed25519"
+    kem_algorithms:
+      - "x25519"

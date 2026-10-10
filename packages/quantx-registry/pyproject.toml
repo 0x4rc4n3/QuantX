@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "quantx-registry"
+version = "0.1.0"
+description = "QuantX crypto-agile algorithm registry and role resolution (Layer 3)"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{ name = "QuantX Team" }]
+license = { text = "Apache-2.0" }
+dependencies = [
+    "quantx-core>=0.1.0",
+    "quantx-crypto-adapters>=0.1.0",
+    "quantx-combiners>=0.1.0",
+    "pyyaml>=6.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "hypothesis>=6.100.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
