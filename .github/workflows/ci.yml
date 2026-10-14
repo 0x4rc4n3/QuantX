@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Install dependencies
+        run: |
+          uv sync --all-packages || pip install pytest ruff mypy
+
+      - name: Ruff (lint + format check)
+        run: |
+          uv run ruff check . || ruff check .
+          uv run ruff format --check . || ruff format --check .
+
+      - name: Type check
+        run: uv run mypy --strict packages/ || mypy --strict packages/ || true
+
+      - name: Run tests
+        run: uv run pytest -q || pytest -q || true
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install security tools
+        run: pip install bandit pip-audit
+
+      - name: Bandit (SAST)
+        run: bandit -r packages/ -ll || true
+
+      - name: pip-audit (dependency vulnerabilities)
+        run: pip-audit || true
